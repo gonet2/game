@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package proto;
+
+// game definition
+service GameService {
+	rpc Stream(stream Game.Frame) returns (stream Game.Frame);  // 透传消息, 双向流
+}
+
+message Game {
+	enum FrameType {
+		Message = 0;
+		Register = 1;
+		Unregister = 2;
+		Kick = 3;
+	}
+	message Frame {
+		FrameType Type=1;
+		bytes Message=2;
+		int32 UserId = 3;
+	}
+}
