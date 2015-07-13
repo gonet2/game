@@ -1,0 +1,4 @@
+.git
+.godeps
+bin
+pkg

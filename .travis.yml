@@ -1,0 +1,11 @@
+language: go
+go:
+    - 1.4
+install:
+    - export GOPATH=$GOPATH/src/github.com/gonet2/game
+    - cd $GOPATH
+    - wget -qO- https://raw.githubusercontent.com/pote/gpm/v1.3.2/bin/gpm | bash
+    - go install game
+before_script:
+script:
+    - exit 0
