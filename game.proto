@@ -13,6 +13,7 @@ message Game {
 		Register = 1;
 		Unregister = 2;
 		Kick = 3;
+		Ping = 4;	// for testing
 	}
 	message Frame {
 		FrameType Type=1;

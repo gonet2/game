@@ -101,6 +101,12 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 			registry.Unregister(sess.UserId)
 			log.Trace("user unregistered")
 			return nil
+		case Game_Ping:
+			if err := stream.Send(&Game_Frame{Type: Game_Ping, Message: in.Message}); err != nil {
+				log.Critical(err)
+				return err
+			}
+			log.Trace("pinged")
 		default:
 			log.Errorf("incorrect frame type: %v", in.Type)
 			return ERROR_INCORRECT_FRAME_TYPE
