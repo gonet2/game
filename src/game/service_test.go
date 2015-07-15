@@ -5,8 +5,10 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"io"
+	"math/rand"
 	pb "proto"
 	"testing"
+	"time"
 )
 
 const (
@@ -14,6 +16,8 @@ const (
 )
 
 func TestGamePing(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address)
 	if err != nil {
@@ -44,14 +48,15 @@ func TestGamePing(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			t.Logf("ping reply : %v", string(in.Message))
+			t.Logf("reply: %v", string(in.Message))
 			i++
 		}
 	}()
 
 	for i := 0; i < N; i++ {
-		t.Logf("ping %v", i)
-		if err := stream.Send(&pb.Game_Frame{Type: pb.Game_Ping, Message: []byte(fmt.Sprintf("%v ping", i))}); err != nil {
+		v := r.Int31()
+		t.Logf("ping with:%v", v)
+		if err := stream.Send(&pb.Game_Frame{Type: pb.Game_Ping, Message: []byte(fmt.Sprint(v))}); err != nil {
 			t.Fatal(err)
 			return
 		}
