@@ -26,4 +26,4 @@ echo "ETCD_HOST set to:" $ETCD_HOST
 echo "NSQD_HOST set to:" $NSQD_HOST
 echo "REDIS_HOST set to:" $REDIS_HOST
 echo "MONGODB_URL set to:" $MONGODB_URL
-$GOBIN/game_server
+$GOBIN/game
