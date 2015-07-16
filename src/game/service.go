@@ -65,8 +65,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 	// loop with chan
 	for {
 		select {
-		// frame from device
-		case frame, ok := <-ch_device:
+		case frame, ok := <-ch_device: // frame from device
 			if !ok { // EOF
 				return nil
 			}
@@ -133,8 +132,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				log.Errorf("incorrect frame type: %v", frame.Type)
 				return ERROR_INCORRECT_FRAME_TYPE
 			}
-		// async message
-		case frame := <-ch_notify:
+		case frame := <-ch_notify: // async message
 			// send notify to agent
 			if err := stream.Send(frame); err != nil {
 				log.Critical(err)
