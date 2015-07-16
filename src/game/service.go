@@ -57,27 +57,28 @@ func (s *server) recv(stream GameService_StreamServer) chan *Game_Frame {
 	return ch
 }
 
+// stream server
 func (s *server) Stream(stream GameService_StreamServer) error {
 	var sess Session
-	ch_device := s.recv(stream)
-	ch_notify := make(chan *Game_Frame, 1)
+	ch_agent := s.recv(stream)
+	ch_ipc := make(chan *Game_Frame, 1)
 
 	// loop with chan
 	for {
 		select {
-		case frame, ok := <-ch_device: // frame from device
+		case frame, ok := <-ch_agent: // frames from agent
 			if !ok { // EOF
 				return nil
 			}
 			switch frame.Type {
 			case Game_Message:
-				// flag validation
+				// validation
 				if sess.Flag&SESS_REGISTERED == 0 {
 					log.Critical("user not registered")
 					return ERROR_USER_NOT_REGISTERED
 				}
 
-				// locate handler
+				// locate handler by proto number
 				reader := packet.Reader(frame.Message)
 				c, err := reader.ReadS16()
 				if err != nil {
@@ -92,11 +93,12 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				}
 
 				// serialized processing, no future locks needed.
+				// multiple agents can connect simutaneously to games
 				var ret []byte
 				wrap := func() { ret = handle(&sess, reader) }
 				s.latch(wrap)
 
-				// write return value
+				// construct frame & return message from logic
 				if ret != nil {
 					if err := stream.Send(&Game_Frame{Type: Game_Message, Message: ret}); err != nil {
 						log.Critical(err)
@@ -104,7 +106,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 					}
 				}
 
-				// session control
+				// session control by logic
 				if sess.Flag&SESS_KICKED_OUT != 0 { // logic kick out
 					if err := stream.Send(&Game_Frame{Type: Game_Kick}); err != nil {
 						log.Critical(err)
@@ -115,7 +117,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 			case Game_Register:
 				// TODO: create session
 				sess.Flag |= SESS_REGISTERED
-				registry.Register(sess.UserId, ch_notify)
+				registry.Register(sess.UserId, ch_ipc)
 				log.Trace("user registered")
 			case Game_Unregister:
 				// TODO: destroy session & return
@@ -132,8 +134,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				log.Errorf("incorrect frame type: %v", frame.Type)
 				return ERROR_INCORRECT_FRAME_TYPE
 			}
-		case frame := <-ch_notify: // async message
-			// send notify to agent
+		case frame := <-ch_ipc: // forward async messages from interprocess(goroutines) communication
 			if err := stream.Send(frame); err != nil {
 				log.Critical(err)
 				return err
