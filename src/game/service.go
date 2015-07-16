@@ -57,6 +57,8 @@ func (s *server) recv(stream GameService_StreamServer) chan *Game_Frame {
 			case ch <- in:
 			case <-time.After(RECV_TIMEOUT):
 				log.Warning("recv deliver timeout")
+				close(ch)
+				return
 			}
 		}
 	}()
