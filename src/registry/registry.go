@@ -1,12 +1,11 @@
 package registry
 
 import (
-	. "proto"
 	"sync"
 )
 
 type Registry struct {
-	records map[int32]*GameService_StreamServer // id -> stream
+	records map[int32]interface{} // id -> v
 	sync.RWMutex
 }
 
@@ -19,14 +18,14 @@ func init() {
 }
 
 func (r *Registry) init() {
-	r.records = make(map[int32]*GameService_StreamServer)
+	r.records = make(map[int32]interface{})
 }
 
 // register a user
-func (r *Registry) Register(id int32, stream *GameService_StreamServer) {
+func (r *Registry) Register(id int32, v interface{}) {
 	r.Lock()
 	defer r.Unlock()
-	r.records[id] = stream
+	r.records[id] = v
 }
 
 // unregister a user
@@ -37,7 +36,7 @@ func (r *Registry) Unregister(id int32) {
 }
 
 // query a user
-func (r *Registry) Query(id int32) *GameService_StreamServer {
+func (r *Registry) Query(id int32) interface{} {
 	r.RLock()
 	defer r.RUnlock()
 	return r.records[id]
@@ -50,15 +49,15 @@ func (r *Registry) Count() int {
 	return len(r.records)
 }
 
-func Register(id int32, stream *GameService_StreamServer) {
-	_default_registry.Register(id, stream)
+func Register(id int32, v interface{}) {
+	_default_registry.Register(id, v)
 }
 
 func Unregister(id int32) {
 	_default_registry.Unregister(id)
 }
 
-func Query(id int32) *GameService_StreamServer {
+func Query(id int32) interface{} {
 	return _default_registry.Query(id)
 }
 
