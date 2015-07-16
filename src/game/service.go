@@ -91,7 +91,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 
 				}
 
-				// process
+				// serialized processing, no future locks needed.
 				var ret []byte
 				wrap := func() { ret = handle(&sess, reader) }
 				s.latch(wrap)
