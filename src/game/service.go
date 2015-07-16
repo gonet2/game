@@ -37,7 +37,7 @@ func (s *server) latch(f func()) {
 
 // stream receiver
 func (s *server) recv(stream GameService_StreamServer) chan *Game_Frame {
-	ch := make(chan *Game_Frame)
+	ch := make(chan *Game_Frame, 1)
 	go func() {
 		for {
 			in, err := stream.Recv()
