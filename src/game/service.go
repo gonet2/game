@@ -5,6 +5,7 @@ import (
 	log "github.com/gonet2/libs/nsq-logger"
 	"io"
 	"sync"
+	"time"
 )
 
 import (
@@ -16,7 +17,8 @@ import (
 )
 
 const (
-	SERVICE = "[GAME]"
+	SERVICE      = "[GAME]"
+	RECV_TIMEOUT = 5 * time.Second
 )
 
 var (
@@ -51,7 +53,11 @@ func (s *server) recv(stream GameService_StreamServer) chan *Game_Frame {
 				close(ch)
 				return
 			}
-			ch <- in
+			select {
+			case ch <- in:
+			case <-time.After(RECV_TIMEOUT):
+				log.Warning("recv deliver timeout")
+			}
 		}
 	}()
 	return ch
