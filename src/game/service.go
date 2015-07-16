@@ -71,7 +71,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 	ch_agent := s.recv(stream)
 	ch_ipc := make(chan *Game_Frame, 1)
 
-	// loop with chan
+	// >> main message loop <<
 	for {
 		select {
 		case frame, ok := <-ch_agent: // frames from agent
