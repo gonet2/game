@@ -2,10 +2,11 @@ package main
 
 import (
 	"errors"
-	log "github.com/gonet2/libs/nsq-logger"
 	"io"
 	"sync"
 	"time"
+
+	log "github.com/gonet2/libs/nsq-logger"
 )
 
 import (
@@ -81,7 +82,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 			sess.Flag |= SESS_REGISTERED
 			registry.Unregister(sess.UserId)
 		}
-		log.Trace("stream end")
+		log.Trace("stream end:", sess.UserId)
 	}()
 
 	// >> main message loop <<
