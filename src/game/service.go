@@ -140,7 +140,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				// TODO: create session
 				if sess.Flag&SESS_REGISTERED == 0 {
 					sess.Flag |= SESS_REGISTERED
-					registry.Register(sess.UserId, ch_ipc)
+					registry.Register(frame.UserId, ch_ipc)
 					log.Trace("user registered")
 				} else {
 					log.Critical("user already registered")
