@@ -17,6 +17,10 @@ import (
 )
 
 const (
+	_port = ":51000"
+)
+
+const (
 	SERVICE      = "[GAME]"
 	RECV_TIMEOUT = 5 * time.Second
 )

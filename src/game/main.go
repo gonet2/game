@@ -10,10 +10,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	_port = ":51000"
-)
-
 func main() {
 	log.SetPrefix(SERVICE)
 	// 监听
