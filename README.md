@@ -1,4 +1,6 @@
 # game(逻辑)
+[![Build Status](https://travis-ci.org/gonet2/game.svg?branch=master)](https://travis-ci.org/gonet2/game)
+
 ## 设计理念
 游戏服务器对外只提供一个接口， 即:
 
