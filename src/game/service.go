@@ -78,7 +78,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 
 	defer func() {
 		if sess.Flag&SESS_REGISTERED != 0 {
-			// TODO: destroy session & return
+			// TODO: destroy session
 			sess.Flag &^= SESS_REGISTERED
 			registry.Unregister(sess.UserId)
 		}
@@ -148,7 +148,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				}
 			case Game_Unregister:
 				if sess.Flag&SESS_REGISTERED != 0 {
-					// TODO: destroy session & return
+					// TODO: destroy session
 					sess.Flag &^= SESS_REGISTERED
 					registry.Unregister(sess.UserId)
 					log.Trace("user unregistered")
