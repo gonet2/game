@@ -137,8 +137,8 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 					return nil
 				}
 			case Game_Register:
-				// TODO: create session
 				if sess.Flag&SESS_REGISTERED == 0 {
+					// TODO: create session
 					sess.Flag |= SESS_REGISTERED
 					sess.UserId = frame.UserId
 					registry.Register(frame.UserId, ch_ipc)
@@ -155,7 +155,6 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				} else {
 					log.Critical("user not registered")
 				}
-				return nil
 			case Game_Ping:
 				if err := stream.Send(&Game_Frame{Type: Game_Ping, Message: frame.Message}); err != nil {
 					log.Critical(err)
