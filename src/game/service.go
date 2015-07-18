@@ -79,7 +79,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 	defer func() {
 		if sess.Flag&SESS_REGISTERED != 0 {
 			// TODO: destroy session & return
-			sess.Flag |= SESS_REGISTERED
+			sess.Flag &^= SESS_REGISTERED
 			registry.Unregister(sess.UserId)
 		}
 		log.Trace("stream end:", sess.UserId)
