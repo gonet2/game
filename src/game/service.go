@@ -74,7 +74,7 @@ func (s *server) recv(stream GameService_StreamServer) chan *Game_Frame {
 func (s *server) Stream(stream GameService_StreamServer) error {
 	var sess Session
 	ch_agent := s.recv(stream)
-	ch_ipc := make(chan *Game_Frame, 1)
+	ch_ipc := make(chan *Game_Frame, DEFAULT_CH_IPC_SIZE)
 
 	defer func() {
 		if sess.Flag&SESS_REGISTERED != 0 {
