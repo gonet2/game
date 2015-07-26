@@ -162,7 +162,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				}
 				log.Trace("pinged")
 			default:
-				log.Errorf("incorrect frame type: %v", frame.Type)
+				log.Criticalf("incorrect frame type: %v", frame.Type)
 				return ERROR_INCORRECT_FRAME_TYPE
 			}
 		case frame := <-ch_ipc: // forward async messages from interprocess(goroutines) communication
