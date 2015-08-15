@@ -22,7 +22,7 @@ func main() {
 
 	// 注册服务
 	s := grpc.NewServer()
-	ins := &server{}
+	ins := new(server)
 	pb.RegisterGameServiceServer(s, ins)
 
 	// 开始服务
