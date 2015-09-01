@@ -6,7 +6,7 @@
 
 > rpc Stream(stream Game.Frame) returns (stream Game.Frame);
 
-接收来自agent的Frame的双向流
+接收来自agent的请求Frame流，并返回给agent响应Frame流
 
 来自设备的数据包，通过agent后直接透传到game server, Frame大体分为两类：  
 
