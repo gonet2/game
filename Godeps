@@ -6,6 +6,6 @@ golang.org/x/oauth2 HEAD
 google.golang.org/grpc HEAD
 gopkg.in/vmihailenco/msgpack.v2 v2.3
 gopkg.in/mgo.v2 r2015.01.24
-github.com/davecgh/go-spew/spew f9f629a1d082960e5d1747f33c2b378612615fea
-github.com/peterbourgon/g2s ec76db4c1ac16400ac0e17ca9c4840e1d23da5dc
+github.com/davecgh/go-spew/spew HEAD
+github.com/peterbourgon/g2s HEAD
 github.com/gonet2/libs HEAD
