@@ -2,7 +2,6 @@ github.com/bradfitz/http2 HEAD
 github.com/coreos/go-etcd/etcd HEAD
 github.com/bitly/go-nsq HEAD
 github.com/golang/glog HEAD
-golang.org/x/oauth2 HEAD
 google.golang.org/grpc HEAD
 gopkg.in/vmihailenco/msgpack.v2 v2.3
 gopkg.in/mgo.v2 r2015.01.24
