@@ -1,4 +1,5 @@
 .git
-.godeps
-bin
 pkg
+bin
+.godeps/pkg
+.godeps/bin
