@@ -16,7 +16,7 @@ import (
 
 const (
 	DEFAULT_NUMBERS_PATH = "/numbers"
-	DEFAULT_ETCD         = "http://127.0.0.1:2379"
+	DEFAULT_ETCD         = "http://172.17.42.1:2379"
 	RETRY_DELAY          = 10 * time.Second
 )
 
