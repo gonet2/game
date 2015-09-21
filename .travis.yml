@@ -1,6 +1,6 @@
 language: go
 go:
-    - 1.4
+    - 1.5
 install:
     - export GOPATH=$GOPATH/src/github.com/gonet2/game
     - cd $GOPATH
