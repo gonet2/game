@@ -73,10 +73,14 @@ func _pack(v reflect.Value, writer *Packet) {
 		}
 		_pack(v.Elem(), writer)
 	case reflect.Slice:
-		l := v.Len()
-		writer.WriteU16(uint16(l))
-		for i := 0; i < l; i++ {
-			_pack(v.Index(i), writer)
+		if bs, ok := v.Interface().([]byte); ok { // special treat for []bytes
+			writer.WriteBytes(bs)
+		} else {
+			l := v.Len()
+			writer.WriteU16(uint16(l))
+			for i := 0; i < l; i++ {
+				_pack(v.Index(i), writer)
+			}
 		}
 	case reflect.Struct:
 		numFields := v.NumField()

@@ -7,24 +7,11 @@ import (
 
 const (
 	PACKET_LIMIT = 65535
-	PACKET_POOL  = 10000
-)
-
-var (
-	_pool = make(chan *Packet, PACKET_POOL)
 )
 
 type Packet struct {
 	pos  int
 	data []byte
-}
-
-func init() {
-	go func() {
-		for {
-			_pool <- &Packet{data: make([]byte, 0, 512)}
-		}
-	}()
 }
 
 func (p *Packet) Data() []byte {
@@ -275,5 +262,5 @@ func Reader(data []byte) *Packet {
 }
 
 func Writer() *Packet {
-	return <-_pool
+	return &Packet{data: make([]byte, 0, 512)}
 }
