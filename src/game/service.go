@@ -43,26 +43,25 @@ func (s *server) latch(f func()) {
 }
 
 // stream receiver
-func (s *server) recv(stream GameService_StreamServer) chan *Game_Frame {
+func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) chan *Game_Frame {
 	ch := make(chan *Game_Frame, 1)
 	go func() {
+		defer func() {
+			close(ch)
+		}()
 		for {
 			in, err := stream.Recv()
 			if err == io.EOF { // client closed
-				close(ch)
 				return
 			}
 
 			if err != nil {
 				log.Critical(err)
-				close(ch)
 				return
 			}
 			select {
 			case ch <- in:
-			case <-time.After(RECV_TIMEOUT):
-				log.Warning("recv deliver timeout")
-				close(ch)
+			case <-sess_die:
 				return
 			}
 		}
@@ -72,8 +71,10 @@ func (s *server) recv(stream GameService_StreamServer) chan *Game_Frame {
 
 // stream server
 func (s *server) Stream(stream GameService_StreamServer) error {
+	// session init
 	var sess Session
-	ch_agent := s.recv(stream)
+	sess_die := make(chan struct{})
+	ch_agent := s.recv(stream, sess_die)
 	ch_ipc := make(chan *Game_Frame, DEFAULT_CH_IPC_SIZE)
 
 	defer func() {
@@ -82,6 +83,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 			sess.Flag &^= SESS_REGISTERED
 			registry.Unregister(sess.UserId)
 		}
+		close(sess_die)
 		log.Trace("stream end:", sess.UserId)
 	}()
 
@@ -114,8 +116,9 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 
 				}
 
-				// serialized processing, no future locks needed.
-				// multiple agents can connect simutaneously to games
+				// CAUTION: serialized processing, no future locks needed.
+				// multiple agents can connect simutaneously to games.
+				// but possibly you will split this into smaller mutexes.
 				var ret []byte
 				wrap := func() { ret = handle(&sess, reader) }
 				s.latch(wrap)
