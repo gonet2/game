@@ -14,6 +14,8 @@ It has these top-level messages:
 package proto
 
 import proto1 "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 import (
 	context "golang.org/x/net/context"
@@ -21,11 +23,9 @@ import (
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// Reference imports to suppress errors if they are not otherwise used.
 var _ = proto1.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 type Game_FrameType int32
 
@@ -64,9 +64,9 @@ func (m *Game) String() string { return proto1.CompactTextString(m) }
 func (*Game) ProtoMessage()    {}
 
 type Game_Frame struct {
-	Type    Game_FrameType `protobuf:"varint,1,opt,enum=proto.Game_FrameType" json:"Type,omitempty"`
-	Message []byte         `protobuf:"bytes,2,opt,proto3" json:"Message,omitempty"`
-	UserId  int32          `protobuf:"varint,3,opt" json:"UserId,omitempty"`
+	Type    Game_FrameType `protobuf:"varint,1,opt,name=Type,enum=proto.Game_FrameType" json:"Type,omitempty"`
+	Message []byte         `protobuf:"bytes,2,opt,name=Message,proto3" json:"Message,omitempty"`
+	UserId  int32          `protobuf:"varint,3,opt,name=UserId" json:"UserId,omitempty"`
 }
 
 func (m *Game_Frame) Reset()         { *m = Game_Frame{} }
@@ -76,6 +76,10 @@ func (*Game_Frame) ProtoMessage()    {}
 func init() {
 	proto1.RegisterEnum("proto.Game_FrameType", Game_FrameType_name, Game_FrameType_value)
 }
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
 
 // Client API for GameService service
 
