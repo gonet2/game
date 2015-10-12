@@ -6,6 +6,7 @@ import (
 	pb "proto"
 
 	log "github.com/gonet2/libs/nsq-logger"
+	sp "github.com/gonet2/libs/services"
 	_ "github.com/gonet2/libs/statsd-pprof"
 	"google.golang.org/grpc"
 )
@@ -25,6 +26,8 @@ func main() {
 	ins := new(server)
 	pb.RegisterGameServiceServer(s, ins)
 
+	// 初始化Services
+	sp.Init()
 	// 开始服务
 	s.Serve(lis)
 }
