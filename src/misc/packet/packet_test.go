@@ -14,6 +14,7 @@ func TestPacketWriter(t *testing.T) {
 	e := uint64(0xFF00000000000000)
 	f32 := float32(1.0)
 	f64 := float64(2.0)
+	s8 := int8(-1)
 
 	p.WriteBool(true)
 	p.WriteByte(a)
@@ -23,6 +24,7 @@ func TestPacketWriter(t *testing.T) {
 	p.WriteU64(e)
 	p.WriteFloat32(f32)
 	p.WriteFloat64(f64)
+	p.WriteS8(s8)
 
 	p.WriteString("hello world")
 	p.WriteBytes([]byte("hello world"))
@@ -71,6 +73,11 @@ func TestPacketWriter(t *testing.T) {
 		t.Error("packet readf32 mismatch")
 	}
 
+	tmp7, _ := reader.ReadS8()
+	if s8 != tmp7 {
+		t.Error("packet reads8 mismatch")
+	}
+
 	tmp100, _ := reader.ReadString()
 
 	if "hello world" != tmp100 {
@@ -89,7 +96,6 @@ func TestPacketWriter(t *testing.T) {
 	if len(tmp102) != 0 {
 		t.Error("packet read nil bytes mistmatch")
 	}
-
 	_, err := reader.ReadByte()
 
 	if err == nil {

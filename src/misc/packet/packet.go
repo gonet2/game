@@ -78,6 +78,13 @@ func (p *Packet) ReadString() (ret string, err error) {
 	return
 }
 
+func (p *Packet) ReadS8() (ret int8, err error) {
+	_ret, _err := p.ReadByte()
+	ret = int8(_ret)
+	err = _err
+	return
+}
+
 func (p *Packet) ReadU16() (ret uint16, err error) {
 	if p.pos+2 > len(p.data) {
 		err = errors.New("read uint16 failed")
@@ -217,6 +224,10 @@ func (p *Packet) WriteString(v string) {
 	bytes := []byte(v)
 	p.WriteU16(uint16(len(bytes)))
 	p.data = append(p.data, bytes...)
+}
+
+func (p *Packet) WriteS8(v int8) {
+	p.WriteByte(byte(v))
 }
 
 func (p *Packet) WriteU16(v uint16) {
