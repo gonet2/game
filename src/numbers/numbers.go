@@ -1,17 +1,16 @@
 package numbers
 
 import (
-	"bytes"
-	"encoding/csv"
+	"encoding/base64"
 	"fmt"
-	"github.com/coreos/go-etcd/etcd"
-	log "github.com/gonet2/nsq-logger"
-	"os"
-	"path/filepath"
+	log "github.com/gonet2/libs/nsq-logger"
+	"github.com/tealeg/xlsx"
 	"strconv"
-	"strings"
-	"sync"
 	"time"
+)
+
+import (
+	"etcdclient"
 )
 
 const (
@@ -25,143 +24,78 @@ var (
 )
 
 func init() {
-	_default_numbers.init()
-	_default_numbers.load(DEFAULT_NUMBERS_PATH)
-	go _default_numbers.watcher()
+	_default_numbers.init(DEFAULT_NUMBERS_PATH)
 }
 
-// a record contains fields
+// 字段定义
 type record struct {
 	fields map[string]string
 }
 
-// a table contains records
+// 表定义
 type table struct {
-	records map[string]*record // all records
-	keys    []string           // all record keys
+	records map[string]*record
+	keys    []string
 }
 
-// numbers contains all tables
+// 数值类
 type numbers struct {
-	tables      map[string]*table
-	client_pool sync.Pool // etcd client pool
-	sync.RWMutex
+	tables map[string]*table
 }
 
-func (ns *numbers) init() {
-	machines := []string{DEFAULT_ETCD}
-	if env := os.Getenv("ETCD_HOST"); env != "" {
-		machines = strings.Split(env, ";")
-	}
-
-	ns.client_pool.New = func() interface{} {
-		return etcd.NewClient(machines)
-	}
-}
-
-// load all csv(s) from a given directory in etcd
-func (ns *numbers) load(directory string) {
-	client := ns.client_pool.Get().(*etcd.Client)
-	defer func() {
-		ns.client_pool.Put(client)
-	}()
-
-	// get the keys under directory
-	log.Info("loading numbers from:", directory)
-	resp, err := client.Get(directory, true, false)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	// validation check
-	if !resp.Node.Dir {
-		log.Error("not a directory")
-		return
-	}
-
-	// read all csv(s) from this dirctory
+func (ns *numbers) init(path string) {
 	ns.tables = make(map[string]*table)
-	count := 0
-	for _, node := range resp.Node.Nodes {
-		if !node.Dir {
-			log.Trace("loading:", node.Key)
-			ns.parse(node.Key, node.Value)
-			count++
-		} else {
-			log.Warning("not a file:", node.Key)
-		}
-	}
-
-	log.Finef("%v csv(s) loaded", count)
-}
-
-// watcher for data change in etcd directory
-func (ns *numbers) watcher() {
-	client := ns.client_pool.Get().(*etcd.Client)
+	client := etcdclient.GetClient()
 	defer func() {
-		ns.client_pool.Put(client)
+		client.Close()
 	}()
 
-	for {
-		ch := make(chan *etcd.Response, 10)
-		go func() {
-			for {
-				if resp, ok := <-ch; ok {
-					if !resp.Node.Dir {
-						ns.parse(resp.Node.Key, resp.Node.Value)
-						log.Trace("csv change:", resp.Node.Key)
-					}
-				} else {
-					return
-				}
-			}
-		}()
-
-		_, err := client.Watch(DEFAULT_NUMBERS_PATH, 0, true, ch, nil)
-		if err != nil {
-			log.Critical(err)
-		}
-		<-time.After(RETRY_DELAY)
+	resp, err := client.Get(path, false, false)
+	if err != nil {
+		log.Critical(err)
+		return
 	}
+
+	// 解码xlsx
+	xlsx_bin, err := base64.StdEncoding.DecodeString(resp.Node.Value)
+	if err != nil {
+		log.Critical(err)
+		return
+	}
+
+	// 读取xlsx
+	xlsx_reader, err := xlsx.OpenBinary(xlsx_bin)
+	if err != nil {
+		log.Critical(err)
+		return
+	}
+	ns.parse(xlsx_reader.Sheets)
 }
 
 // parse & load a csv
-func (ns *numbers) parse(key, value string) {
-	ns.Lock()
-	defer ns.Unlock()
-	src := bytes.NewBufferString(value)
-	csv_reader := csv.NewReader(src)
-	records, err := csv_reader.ReadAll()
-	if err != nil {
-		log.Errorf("%v %v", err, key)
-		return
-	}
-
-	if len(records) == 0 {
-		log.Warningf("empty document: %v", key)
-		return
-	}
-
-	tblname := filepath.Base(key)
-	// 记录数据, 第一行为表头，因此从第二行开始
-	for line := 1; line < len(records); line++ {
-		for field := 1; field < len(records[line]); field++ { // 每条记录的第一个字段作为行索引
-			ns.set(ns.tables, tblname, records[line][0], records[0][field], records[line][field])
+func (ns *numbers) parse(sheets []*xlsx.Sheet) {
+	for _, sheet := range sheets {
+		// 第一行为表头，因此从第二行开始
+		if len(sheet.Rows) > 0 {
+			header := sheet.Rows[0]
+			for i := 1; i < len(sheet.Rows); i++ {
+				row := sheet.Rows[i]
+				for j := 1; j < len(row.Cells); j++ {
+					ns.set(sheet.Name, row.Cells[0].String(), header.Cells[j].String(), row.Cells[j].String())
+				}
+			}
 		}
+		ns.dump_keys(sheet.Name)
 	}
-
-	// 记录KEYS
-	ns.dump_keys(ns.tables, tblname)
 }
 
 // set field value
-func (ns *numbers) set(tables map[string]*table, tblname string, rowname string, fieldname string, value string) {
-	tbl, ok := tables[tblname]
+func (ns *numbers) set(tblname string, rowname string, fieldname string, value string) {
+	tbl, ok := ns.tables[tblname]
 	if !ok {
 		tbl = &table{}
 		tbl.records = make(map[string]*record)
-		tables[tblname] = tbl
+		ns.tables[tblname] = tbl
 	}
 
 	rec, ok := tbl.records[rowname]
@@ -175,8 +109,8 @@ func (ns *numbers) set(tables map[string]*table, tblname string, rowname string,
 }
 
 // dump keys
-func (ns *numbers) dump_keys(tables map[string]*table, tblname string) {
-	tbl, ok := tables[tblname]
+func (ns *numbers) dump_keys(tblname string) {
+	tbl, ok := ns.tables[tblname]
 	if !ok {
 		panic(fmt.Sprint("table ", tblname, " not exists!"))
 	}
@@ -188,11 +122,7 @@ func (ns *numbers) dump_keys(tables map[string]*table, tblname string) {
 
 // get field value
 func (ns *numbers) get(tblname string, rowname string, fieldname string) string {
-	ns.RLock()
-	defer ns.RUnlock()
-	tables := ns.tables
-
-	tbl, ok := tables[tblname]
+	tbl, ok := ns.tables[tblname]
 	if !ok {
 		panic(fmt.Sprint("table ", tblname, " not exists!"))
 	}
@@ -251,8 +181,6 @@ func (ns *numbers) GetString(tblname string, rowname interface{}, fieldname stri
 
 // get all keys
 func (ns *numbers) GetKeys(tblname string) []string {
-	ns.RLock()
-	defer ns.RUnlock()
 	tables := ns.tables
 
 	tbl, ok := tables[tblname]
@@ -265,8 +193,6 @@ func (ns *numbers) GetKeys(tblname string) []string {
 
 // get row count
 func (ns *numbers) Count(tblname string) int32 {
-	ns.RLock()
-	defer ns.RUnlock()
 	tables := ns.tables
 
 	tbl, ok := tables[tblname]
@@ -279,8 +205,6 @@ func (ns *numbers) Count(tblname string) int32 {
 
 // test record exists
 func (ns *numbers) IsRecordExists(tblname string, rowname interface{}) bool {
-	ns.RLock()
-	defer ns.RUnlock()
 	tables := ns.tables
 
 	tbl, ok := tables[tblname]
@@ -298,8 +222,6 @@ func (ns *numbers) IsRecordExists(tblname string, rowname interface{}) bool {
 
 // test field exists
 func (ns *numbers) IsFieldExists(tblname string, fieldname string) bool {
-	ns.RLock()
-	defer ns.RUnlock()
 	tables := ns.tables
 
 	// check table existence
