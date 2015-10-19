@@ -6,7 +6,6 @@ import (
 	log "github.com/gonet2/libs/nsq-logger"
 	"github.com/tealeg/xlsx"
 	"strconv"
-	"time"
 )
 
 import (
@@ -16,7 +15,6 @@ import (
 const (
 	DEFAULT_NUMBERS_PATH = "/numbers"
 	DEFAULT_ETCD         = "http://172.17.42.1:2379"
-	RETRY_DELAY          = 10 * time.Second
 )
 
 var (
@@ -181,9 +179,7 @@ func (ns *numbers) GetString(tblname string, rowname interface{}, fieldname stri
 
 // get all keys
 func (ns *numbers) GetKeys(tblname string) []string {
-	tables := ns.tables
-
-	tbl, ok := tables[tblname]
+	tbl, ok := ns.tables[tblname]
 	if !ok {
 		panic(fmt.Sprint("table ", tblname, " not exists!"))
 	}
@@ -193,9 +189,7 @@ func (ns *numbers) GetKeys(tblname string) []string {
 
 // get row count
 func (ns *numbers) Count(tblname string) int32 {
-	tables := ns.tables
-
-	tbl, ok := tables[tblname]
+	tbl, ok := ns.tables[tblname]
 	if !ok {
 		panic(fmt.Sprint("table ", tblname, " not exists!"))
 	}
@@ -205,9 +199,7 @@ func (ns *numbers) Count(tblname string) int32 {
 
 // test record exists
 func (ns *numbers) IsRecordExists(tblname string, rowname interface{}) bool {
-	tables := ns.tables
-
-	tbl, ok := tables[tblname]
+	tbl, ok := ns.tables[tblname]
 	if !ok {
 		return false
 	}
@@ -222,10 +214,8 @@ func (ns *numbers) IsRecordExists(tblname string, rowname interface{}) bool {
 
 // test field exists
 func (ns *numbers) IsFieldExists(tblname string, fieldname string) bool {
-	tables := ns.tables
-
 	// check table existence
-	tbl, ok := tables[tblname]
+	tbl, ok := ns.tables[tblname]
 	if !ok {
 		return false
 	}
