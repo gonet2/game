@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"io"
-	"sync"
 	"time"
 
 	log "github.com/gonet2/libs/nsq-logger"
@@ -32,15 +31,7 @@ var (
 	ERROR_USER_NOT_REGISTERED  = errors.New("user not registered")
 )
 
-type server struct {
-	sync.Mutex
-}
-
-func (s *server) latch(f func()) {
-	s.Lock()
-	defer s.Unlock()
-	f()
-}
+type server struct{}
 
 // stream receiver
 func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) chan *Game_Frame {
@@ -115,12 +106,8 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 
 				}
 
-				// CAUTION: serialized processing, no future locks needed.
-				// multiple agents can connect simutaneously to games.
-				// but possibly you will split this into smaller mutexes.
-				var ret []byte
-				wrap := func() { ret = handle(&sess, reader) }
-				s.latch(wrap)
+				// handle request
+				ret := handle(&sess, reader)
 
 				// construct frame & return message from logic
 				if ret != nil {
