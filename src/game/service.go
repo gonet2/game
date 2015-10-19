@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"io"
-	"time"
 
 	log "github.com/gonet2/libs/nsq-logger"
 )
@@ -21,8 +20,7 @@ const (
 )
 
 const (
-	SERVICE      = "[GAME]"
-	RECV_TIMEOUT = 5 * time.Second
+	SERVICE = "[GAME]"
 )
 
 var (
