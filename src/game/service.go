@@ -62,7 +62,6 @@ func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) c
 			select {
 			case ch <- in:
 			case <-sess_die:
-				return
 			}
 		}
 	}()
