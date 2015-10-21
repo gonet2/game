@@ -1,5 +1,4 @@
 github.com/bradfitz/http2 HEAD
-github.com/coreos/go-etcd/etcd HEAD
 github.com/bitly/go-nsq HEAD
 github.com/golang/glog HEAD
 google.golang.org/grpc HEAD

@@ -1,7 +1,8 @@
 package etcdclient
 
 import (
-	"github.com/coreos/go-etcd/etcd"
+	etcdclient "github.com/coreos/etcd/client"
+	log "github.com/gonet2/libs/nsq-logger"
 	"os"
 	"strings"
 )
@@ -20,6 +21,15 @@ func init() {
 	}
 }
 
-func GetClient() *etcd.Client {
-	return etcd.NewClient(machines)
+func KeysAPI() etcdclient.KeysAPI {
+	cfg := etcdclient.Config{
+		Endpoints: machines,
+		Transport: etcdclient.DefaultTransport,
+	}
+	c, err := etcdclient.New(cfg)
+	if err != nil {
+		log.Critical(err)
+		return nil
+	}
+	return etcdclient.NewKeysAPI(c)
 }
