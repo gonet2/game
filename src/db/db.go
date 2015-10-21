@@ -10,6 +10,7 @@ import (
 const (
 	DEFAULT_MGO_TIMEOUT = 300
 	DEFAULT_CONCURRENT  = 128
+	DEFAULT_MONGODB_URL = "mongodb://172.17.42.1/mydb"
 	ENV_MONGODB         = "MONGODB_URL"
 )
 
@@ -21,11 +22,14 @@ type Database struct {
 func (db *Database) Init() {
 	// create latch
 	db.latch = make(chan *mgo.Session, DEFAULT_CONCURRENT)
-
 	// connect db
-	sess, err := mgo.Dial(os.Getenv(ENV_MONGODB))
+	mongodb_url := DEFAULT_MONGODB_URL
+	if env := os.Getenv(ENV_MONGODB); env != "" {
+		mongodb_url = env
+	}
+	sess, err := mgo.Dial(mongodb_url)
 	if err != nil {
-		log.Println("mongodb: cannot connect to", os.Getenv(ENV_MONGODB), err)
+		log.Println("mongodb: cannot connect to", os.Getenv(mongodb_url), err)
 		os.Exit(-1)
 	}
 
