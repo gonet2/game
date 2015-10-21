@@ -17,9 +17,7 @@ func Pack(tos int16, tbl interface{}, writer *Packet) []byte {
 	}
 
 	// write protocol number
-	if tos != -1 {
-		writer.WriteU16(uint16(tos))
-	}
+	writer.WriteS16(tos)
 
 	// is the table nil?
 	if tbl == nil {
