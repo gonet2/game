@@ -8,3 +8,4 @@ github.com/davecgh/go-spew/spew HEAD
 github.com/peterbourgon/g2s HEAD
 github.com/gonet2/libs HEAD
 github.com/tealeg/xlsx HEAD
+github.com/coreos/etcd/client HEAD
