@@ -5,6 +5,7 @@ import (
 	"fmt"
 	log "github.com/gonet2/libs/nsq-logger"
 	"github.com/tealeg/xlsx"
+	"golang.org/x/net/context"
 	"strconv"
 )
 
@@ -43,14 +44,10 @@ type numbers struct {
 
 func (ns *numbers) init(path string) {
 	ns.tables = make(map[string]*table)
-	client := etcdclient.GetClient()
-	defer func() {
-		client.Close()
-	}()
-
-	resp, err := client.Get(path, false, false)
+	kapi := etcdclient.KeysAPI()
+	resp, err := kapi.Get(context.Background(), path, nil)
 	if err != nil {
-		log.Critical(err)
+		log.Error(err)
 		return
 	}
 

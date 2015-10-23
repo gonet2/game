@@ -12,6 +12,7 @@ const (
 )
 
 var machines []string
+var client etcdclient.Client
 
 func init() {
 	// etcd client
@@ -19,17 +20,22 @@ func init() {
 	if env := os.Getenv("ETCD_HOST"); env != "" {
 		machines = strings.Split(env, ";")
 	}
-}
 
-func KeysAPI() etcdclient.KeysAPI {
+	// config
 	cfg := etcdclient.Config{
 		Endpoints: machines,
 		Transport: etcdclient.DefaultTransport,
 	}
+
+	// create client
 	c, err := etcdclient.New(cfg)
 	if err != nil {
 		log.Critical(err)
-		return nil
+		return
 	}
-	return etcdclient.NewKeysAPI(c)
+	client = c
+}
+
+func KeysAPI() etcdclient.KeysAPI {
+	return etcdclient.NewKeysAPI(client)
 }
