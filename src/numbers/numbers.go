@@ -37,6 +37,12 @@ type table struct {
 	keys    []string
 }
 
+// numbers可以读取以下的结构的xlsx sheet
+// (null)   字段1    字段2    字段3
+// 记录1    值       值       值
+// 记录2    值       值       值
+// 记录3    值       值       值
+
 // 数值类
 type numbers struct {
 	tables map[string]*table
@@ -67,7 +73,7 @@ func (ns *numbers) init(path string) {
 	ns.parse(xlsx_reader.Sheets)
 }
 
-// parse & load a csv
+// 载入数据
 func (ns *numbers) parse(sheets []*xlsx.Sheet) {
 	for _, sheet := range sheets {
 		// 第一行为表头，因此从第二行开始
@@ -84,7 +90,7 @@ func (ns *numbers) parse(sheets []*xlsx.Sheet) {
 	}
 }
 
-// set field value
+// 设置值
 func (ns *numbers) set(tblname string, rowname string, fieldname string, value string) {
 	tbl, ok := ns.tables[tblname]
 	if !ok {
@@ -103,7 +109,7 @@ func (ns *numbers) set(tblname string, rowname string, fieldname string, value s
 	rec.fields[fieldname] = value
 }
 
-// dump keys
+// 记录所有的KEY
 func (ns *numbers) dump_keys(tblname string) {
 	tbl, ok := ns.tables[tblname]
 	if !ok {
@@ -115,7 +121,7 @@ func (ns *numbers) dump_keys(tblname string) {
 	}
 }
 
-// get field value
+// 读取值
 func (ns *numbers) get(tblname string, rowname string, fieldname string) string {
 	tbl, ok := ns.tables[tblname]
 	if !ok {
@@ -134,7 +140,6 @@ func (ns *numbers) get(tblname string, rowname string, fieldname string) string 
 	return value
 }
 
-// get field value as integer
 func (ns *numbers) GetInt(tblname string, rowname interface{}, fieldname string) int32 {
 	val := ns.get(tblname, fmt.Sprint(rowname), fieldname)
 	if val == "" {
@@ -154,7 +159,6 @@ func (ns *numbers) GetInt(tblname string, rowname interface{}, fieldname string)
 	return int32(v)
 }
 
-// get field value as float
 func (ns *numbers) GetFloat(tblname string, rowname interface{}, fieldname string) float64 {
 	val := ns.get(tblname, fmt.Sprint(rowname), fieldname)
 	if val == "" {
@@ -169,12 +173,10 @@ func (ns *numbers) GetFloat(tblname string, rowname interface{}, fieldname strin
 	return f
 }
 
-// get field value as string
 func (ns *numbers) GetString(tblname string, rowname interface{}, fieldname string) string {
 	return ns.get(tblname, fmt.Sprint(rowname), fieldname)
 }
 
-// get all keys
 func (ns *numbers) GetKeys(tblname string) []string {
 	tbl, ok := ns.tables[tblname]
 	if !ok {
@@ -184,7 +186,6 @@ func (ns *numbers) GetKeys(tblname string) []string {
 	return tbl.keys
 }
 
-// get row count
 func (ns *numbers) Count(tblname string) int32 {
 	tbl, ok := ns.tables[tblname]
 	if !ok {
@@ -194,7 +195,6 @@ func (ns *numbers) Count(tblname string) int32 {
 	return int32(len(tbl.records))
 }
 
-// test record exists
 func (ns *numbers) IsRecordExists(tblname string, rowname interface{}) bool {
 	tbl, ok := ns.tables[tblname]
 	if !ok {
@@ -209,9 +209,7 @@ func (ns *numbers) IsRecordExists(tblname string, rowname interface{}) bool {
 	return true
 }
 
-// test field exists
 func (ns *numbers) IsFieldExists(tblname string, fieldname string) bool {
-	// check table existence
 	tbl, ok := ns.tables[tblname]
 	if !ok {
 		return false
@@ -237,6 +235,7 @@ func (ns *numbers) IsFieldExists(tblname string, fieldname string) bool {
 	return true
 }
 
+// 读取表tblname, 行rowname, 字段fieldname的值
 func GetInt(tblname string, rowname interface{}, fieldname string) int32 {
 	return _default_numbers.GetInt(tblname, rowname, fieldname)
 }
@@ -249,18 +248,22 @@ func GetString(tblname string, rowname interface{}, fieldname string) string {
 	return _default_numbers.GetString(tblname, rowname, fieldname)
 }
 
+// 读取表的所有KEY
 func GetKeys(tblname string) []string {
 	return _default_numbers.GetKeys(tblname)
 }
 
+// 返回表的总记录条数
 func Count(tblname string) int32 {
 	return _default_numbers.Count(tblname)
 }
 
+// 测试某个字段是否存在
 func IsFieldExists(tblname string, fieldname string) bool {
 	return _default_numbers.IsFieldExists(tblname, fieldname)
 }
 
+// 测试某条记录是否存在
 func IsRecordExists(tblname string, rowname interface{}) bool {
 	return _default_numbers.IsRecordExists(tblname, rowname)
 }
