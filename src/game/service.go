@@ -133,15 +133,6 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				} else {
 					log.Critical("user already registered")
 				}
-			case Game_Unregister:
-				if sess.Flag&SESS_REGISTERED != 0 {
-					// TODO: destroy session
-					sess.Flag &^= SESS_REGISTERED
-					registry.Unregister(sess.UserId)
-					log.Trace("user unregistered")
-				} else {
-					log.Critical("user not registered")
-				}
 			case Game_Ping:
 				if err := stream.Send(&Game_Frame{Type: Game_Ping, Message: frame.Message}); err != nil {
 					log.Critical(err)
