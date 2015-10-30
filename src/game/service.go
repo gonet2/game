@@ -59,6 +59,7 @@ func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) c
 
 // stream server
 func (s *server) Stream(stream GameService_StreamServer) error {
+	defer utils.PrintPanicStack()
 	// session init
 	var sess Session
 	sess_die := make(chan struct{})
