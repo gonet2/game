@@ -25,6 +25,8 @@
 
 协议的绑定参考 https://github.com/gonet2/tools/tree/master/proto_scripts
 
+## 阅读
+源码阅读从src/game/main.go开始
 
 ## 使用
 参考测试用例以及game.proto文件
