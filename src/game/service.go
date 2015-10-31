@@ -59,7 +59,7 @@ func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) c
 	return ch
 }
 
-// PIPELINE #2. stream server
+// PIPELINE #2 stream processing
 // the center of game logic
 func (s *server) Stream(stream GameService_StreamServer) error {
 	defer PrintPanicStack()

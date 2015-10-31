@@ -1,5 +1,6 @@
 package types
 
+// 一个DEMO的User定义
 type User struct {
 	Id            int32
 	Name          string
