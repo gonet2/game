@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"google.golang.org/grpc/metadata"
 	"io"
+	"strconv"
 
 	log "github.com/gonet2/libs/nsq-logger"
 )
@@ -26,12 +28,12 @@ const (
 var (
 	ERROR_INCORRECT_FRAME_TYPE = errors.New("incorrect frame type")
 	ERROR_SERVICE_NOT_BIND     = errors.New("service not bind")
-	ERROR_USER_NOT_REGISTERED  = errors.New("user not registered")
 )
 
 type server struct{}
 
-// stream receiver
+// PIPELINE #1 stream receiver
+// this function is to make the stream receiving SELECTABLE
 func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) chan *Game_Frame {
 	ch := make(chan *Game_Frame, 1)
 	go func() {
@@ -57,7 +59,8 @@ func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) c
 	return ch
 }
 
-// stream server
+// PIPELINE #2. stream server
+// the center of game logic
 func (s *server) Stream(stream GameService_StreamServer) error {
 	defer PrintPanicStack()
 	// session init
@@ -67,14 +70,33 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 	ch_ipc := make(chan *Game_Frame, DEFAULT_CH_IPC_SIZE)
 
 	defer func() {
-		if sess.Flag&SESS_REGISTERED != 0 {
-			// TODO: destroy session
-			sess.Flag &^= SESS_REGISTERED
-			registry.Unregister(sess.UserId)
-		}
+		registry.Unregister(sess.UserId)
 		close(sess_die)
 		log.Trace("stream end:", sess.UserId)
 	}()
+
+	// read metadata from context
+	md, ok := metadata.FromContext(stream.Context())
+	if !ok {
+		log.Critical("cannot read metadata from context")
+		return ERROR_INCORRECT_FRAME_TYPE
+	}
+	// read key
+	if len(md["userid"]) == 0 {
+		log.Critical("cannot read key:userid from metadata")
+		return ERROR_INCORRECT_FRAME_TYPE
+	}
+	// parse userid
+	userid, err := strconv.Atoi(md["userid"][0])
+	if err != nil {
+		log.Critical(err)
+		return ERROR_INCORRECT_FRAME_TYPE
+	}
+
+	// register user
+	sess.UserId = int32(userid)
+	registry.Register(sess.UserId, ch_ipc)
+	log.Finef("userid %v logged in", sess.UserId)
 
 	// >> main message loop <<
 	for {
@@ -84,13 +106,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				return nil
 			}
 			switch frame.Type {
-			case Game_Message:
-				// validation
-				if sess.Flag&SESS_REGISTERED == 0 {
-					log.Critical("user not registered")
-					return ERROR_USER_NOT_REGISTERED
-				}
-
+			case Game_Message: // the passthrough message from client->agent->game
 				// locate handler by proto number
 				reader := packet.Reader(frame.Message)
 				c, err := reader.ReadS16()
@@ -123,16 +139,6 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 						return err
 					}
 					return nil
-				}
-			case Game_Register:
-				if sess.Flag&SESS_REGISTERED == 0 {
-					// TODO: create session
-					sess.Flag |= SESS_REGISTERED
-					sess.UserId = frame.UserId
-					registry.Register(frame.UserId, ch_ipc)
-					log.Trace("user registered")
-				} else {
-					log.Critical("user already registered")
 				}
 			case Game_Ping:
 				if err := stream.Send(&Game_Frame{Type: Game_Ping, Message: frame.Message}); err != nil {

@@ -10,13 +10,11 @@ service GameService {
 message Game {
 	enum FrameType {
 		Message = 0;
-		Register = 1;	// agent register
-		Kick = 2;	// game kick
-		Ping = 3;	// for testing
+		Kick = 1;
+		Ping = 2;	// for testing
 	}
 	message Frame {
 		FrameType Type=1;
 		bytes Message=2;
-		int32 UserId = 3;
 	}
 }

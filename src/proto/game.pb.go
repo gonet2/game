@@ -30,23 +30,20 @@ var _ = math.Inf
 type Game_FrameType int32
 
 const (
-	Game_Message  Game_FrameType = 0
-	Game_Register Game_FrameType = 1
-	Game_Kick     Game_FrameType = 2
-	Game_Ping     Game_FrameType = 3
+	Game_Message Game_FrameType = 0
+	Game_Kick    Game_FrameType = 1
+	Game_Ping    Game_FrameType = 2
 )
 
 var Game_FrameType_name = map[int32]string{
 	0: "Message",
-	1: "Register",
-	2: "Kick",
-	3: "Ping",
+	1: "Kick",
+	2: "Ping",
 }
 var Game_FrameType_value = map[string]int32{
-	"Message":  0,
-	"Register": 1,
-	"Kick":     2,
-	"Ping":     3,
+	"Message": 0,
+	"Kick":    1,
+	"Ping":    2,
 }
 
 func (x Game_FrameType) String() string {
@@ -63,7 +60,6 @@ func (*Game) ProtoMessage()    {}
 type Game_Frame struct {
 	Type    Game_FrameType `protobuf:"varint,1,opt,name=Type,enum=proto.Game_FrameType" json:"Type,omitempty"`
 	Message []byte         `protobuf:"bytes,2,opt,name=Message,proto3" json:"Message,omitempty"`
-	UserId  int32          `protobuf:"varint,3,opt,name=UserId" json:"UserId,omitempty"`
 }
 
 func (m *Game_Frame) Reset()         { *m = Game_Frame{} }
