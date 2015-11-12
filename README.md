@@ -29,6 +29,7 @@
 源码阅读从src/game/main.go开始
 
 ## 使用
+![game](game.gif)
 参考测试用例以及game.proto文件
 
 ## 安装

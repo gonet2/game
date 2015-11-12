@@ -27,7 +27,7 @@ func main() {
 	pb.RegisterGameServiceServer(s, ins)
 
 	// 初始化Services
-	sp.Init()
+	sp.Init("snowflake")
 	// 开始服务
 	s.Serve(lis)
 }
