@@ -44,12 +44,12 @@ func (db *Database) Init() {
 	}
 }
 
-func (db *Database) Execute(f func(sess *mgo.Session)) {
+func (db *Database) Execute(f func(sess *mgo.Session) error) error {
 	// latch control
 	sess := <-db.latch
 	defer func() {
 		db.latch <- sess
 	}()
 
-	f(sess)
+	return f(sess)
 }
