@@ -50,6 +50,6 @@ func (db *Database) Execute(f func(sess *mgo.Session) error) error {
 	defer func() {
 		db.latch <- sess
 	}()
-
+	sess.Refresh()
 	return f(sess)
 }
