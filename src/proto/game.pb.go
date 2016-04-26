@@ -27,6 +27,10 @@ var _ = proto1.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+const _ = proto1.ProtoPackageIsVersion1
+
 type Game_FrameType int32
 
 const (
@@ -49,30 +53,39 @@ var Game_FrameType_value = map[string]int32{
 func (x Game_FrameType) String() string {
 	return proto1.EnumName(Game_FrameType_name, int32(x))
 }
+func (Game_FrameType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0, 0} }
 
 type Game struct {
 }
 
-func (m *Game) Reset()         { *m = Game{} }
-func (m *Game) String() string { return proto1.CompactTextString(m) }
-func (*Game) ProtoMessage()    {}
+func (m *Game) Reset()                    { *m = Game{} }
+func (m *Game) String() string            { return proto1.CompactTextString(m) }
+func (*Game) ProtoMessage()               {}
+func (*Game) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type Game_Frame struct {
 	Type    Game_FrameType `protobuf:"varint,1,opt,name=Type,enum=proto.Game_FrameType" json:"Type,omitempty"`
 	Message []byte         `protobuf:"bytes,2,opt,name=Message,proto3" json:"Message,omitempty"`
 }
 
-func (m *Game_Frame) Reset()         { *m = Game_Frame{} }
-func (m *Game_Frame) String() string { return proto1.CompactTextString(m) }
-func (*Game_Frame) ProtoMessage()    {}
+func (m *Game_Frame) Reset()                    { *m = Game_Frame{} }
+func (m *Game_Frame) String() string            { return proto1.CompactTextString(m) }
+func (*Game_Frame) ProtoMessage()               {}
+func (*Game_Frame) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0, 0} }
 
 func init() {
+	proto1.RegisterType((*Game)(nil), "proto.Game")
+	proto1.RegisterType((*Game_Frame)(nil), "proto.Game.Frame")
 	proto1.RegisterEnum("proto.Game_FrameType", Game_FrameType_name, Game_FrameType_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion2
 
 // Client API for GameService service
 
@@ -167,4 +180,19 @@ var _GameService_serviceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
+}
+
+var fileDescriptor0 = []byte{
+	// 164 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x4a, 0x4f, 0xcc, 0x4d,
+	0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x4a, 0xc5, 0x5c, 0x2c, 0xee, 0x40,
+	0x41, 0x29, 0x5b, 0x2e, 0x56, 0xb7, 0x22, 0x20, 0x43, 0x48, 0x99, 0x8b, 0x25, 0xa4, 0xb2, 0x20,
+	0x55, 0x82, 0x51, 0x81, 0x51, 0x83, 0xcf, 0x48, 0x14, 0xa2, 0x5a, 0x0f, 0xa4, 0x46, 0x0f, 0xac,
+	0x00, 0x24, 0x29, 0xc4, 0xcf, 0xc5, 0xee, 0x9b, 0x5a, 0x5c, 0x9c, 0x98, 0x9e, 0x2a, 0xc1, 0x04,
+	0x54, 0xc7, 0xa3, 0xa4, 0xc3, 0xc5, 0x89, 0x90, 0xe5, 0x86, 0xcb, 0x0a, 0x30, 0x08, 0x71, 0x70,
+	0xb1, 0x78, 0x67, 0x26, 0x67, 0x0b, 0x30, 0x82, 0x58, 0x01, 0x99, 0x79, 0xe9, 0x02, 0x4c, 0x46,
+	0x8e, 0x5c, 0xdc, 0x20, 0x03, 0x83, 0x53, 0x8b, 0xca, 0x32, 0x93, 0x53, 0x85, 0x8c, 0xb8, 0xd8,
+	0x82, 0x4b, 0x8a, 0x52, 0x13, 0x73, 0x85, 0x04, 0x31, 0xac, 0x93, 0xc2, 0x14, 0xd2, 0x60, 0x34,
+	0x60, 0x4c, 0x62, 0x03, 0x8b, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x92, 0x87, 0xcf, 0xaa,
+	0xd3, 0x00, 0x00, 0x00,
 }
