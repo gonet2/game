@@ -1,9 +1,9 @@
 package main
 
 import (
+	pb "game/proto"
 	"net"
 	"os"
-	pb "proto"
 
 	log "github.com/gonet2/libs/nsq-logger"
 	sp "github.com/gonet2/libs/services"

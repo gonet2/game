@@ -2,19 +2,20 @@ package main
 
 import (
 	"errors"
-	"google.golang.org/grpc/metadata"
 	"io"
 	"strconv"
+
+	"google.golang.org/grpc/metadata"
 
 	log "github.com/gonet2/libs/nsq-logger"
 )
 
 import (
-	"client_handler"
-	"misc/packet"
-	. "proto"
-	"registry"
-	. "types"
+	"game/client_handler"
+	"game/misc/packet"
+	. "game/proto"
+	"game/registry"
+	. "game/types"
 )
 
 const (
