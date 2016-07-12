@@ -1,10 +1,11 @@
 package etcdclient
 
 import (
-	etcdclient "github.com/coreos/etcd/client"
-	log "github.com/gonet2/libs/nsq-logger"
 	"os"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	etcdclient "github.com/coreos/etcd/client"
 )
 
 const (
@@ -30,7 +31,7 @@ func init() {
 	// create client
 	c, err := etcdclient.New(cfg)
 	if err != nil {
-		log.Critical(err)
+		log.Panic(err)
 		return
 	}
 	client = c

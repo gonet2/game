@@ -3,10 +3,11 @@ package numbers
 import (
 	"encoding/base64"
 	"fmt"
-	log "github.com/gonet2/libs/nsq-logger"
+	"strconv"
+
+	log "github.com/Sirupsen/logrus"
 	"github.com/tealeg/xlsx"
 	"golang.org/x/net/context"
-	"strconv"
 )
 
 import (

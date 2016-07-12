@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	log "github.com/gonet2/libs/nsq-logger"
+	log "github.com/Sirupsen/logrus"
 )
 
 import (
@@ -48,7 +48,7 @@ func (s *server) recv(stream GameService_StreamServer, sess_die chan struct{}) c
 			}
 
 			if err != nil {
-				log.Critical(err)
+				log.Error(err)
 				return
 			}
 			select {
@@ -73,31 +73,31 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 	defer func() {
 		registry.Unregister(sess.UserId)
 		close(sess_die)
-		log.Trace("stream end:", sess.UserId)
+		log.Debug("stream end:", sess.UserId)
 	}()
 
 	// read metadata from context
 	md, ok := metadata.FromContext(stream.Context())
 	if !ok {
-		log.Critical("cannot read metadata from context")
+		log.Error("cannot read metadata from context")
 		return ERROR_INCORRECT_FRAME_TYPE
 	}
 	// read key
 	if len(md["userid"]) == 0 {
-		log.Critical("cannot read key:userid from metadata")
+		log.Error("cannot read key:userid from metadata")
 		return ERROR_INCORRECT_FRAME_TYPE
 	}
 	// parse userid
 	userid, err := strconv.Atoi(md["userid"][0])
 	if err != nil {
-		log.Critical(err)
+		log.Error(err)
 		return ERROR_INCORRECT_FRAME_TYPE
 	}
 
 	// register user
 	sess.UserId = int32(userid)
 	registry.Register(sess.UserId, ch_ipc)
-	log.Finef("userid %v logged in", sess.UserId)
+	log.Debug("userid", sess.UserId, "logged in")
 
 	// >> main message loop <<
 	for {
@@ -112,12 +112,12 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				reader := packet.Reader(frame.Message)
 				c, err := reader.ReadS16()
 				if err != nil {
-					log.Critical(err)
+					log.Error(err)
 					return err
 				}
 				handle := client_handler.Handlers[c]
 				if handle == nil {
-					log.Criticalf("service not bind: %v", c)
+					log.Error("service not bind:", c)
 					return ERROR_SERVICE_NOT_BIND
 
 				}
@@ -128,7 +128,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				// construct frame & return message from logic
 				if ret != nil {
 					if err := stream.Send(&Game_Frame{Type: Game_Message, Message: ret}); err != nil {
-						log.Critical(err)
+						log.Error(err)
 						return err
 					}
 				}
@@ -136,24 +136,24 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 				// session control by logic
 				if sess.Flag&SESS_KICKED_OUT != 0 { // logic kick out
 					if err := stream.Send(&Game_Frame{Type: Game_Kick}); err != nil {
-						log.Critical(err)
+						log.Error(err)
 						return err
 					}
 					return nil
 				}
 			case Game_Ping:
 				if err := stream.Send(&Game_Frame{Type: Game_Ping, Message: frame.Message}); err != nil {
-					log.Critical(err)
+					log.Error(err)
 					return err
 				}
-				log.Trace("pinged")
+				log.Debug("pinged")
 			default:
-				log.Criticalf("incorrect frame type: %v", frame.Type)
+				log.Error("incorrect frame type:", frame.Type)
 				return ERROR_INCORRECT_FRAME_TYPE
 			}
 		case frame := <-ch_ipc: // forward async messages from interprocess(goroutines) communication
 			if err := stream.Send(frame); err != nil {
-				log.Critical(err)
+				log.Error(err)
 				return err
 			}
 		}

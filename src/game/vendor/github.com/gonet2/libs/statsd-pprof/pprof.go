@@ -2,11 +2,12 @@ package statsdprof
 
 import (
 	"fmt"
-	log "github.com/gonet2/libs/nsq-logger"
-	"github.com/peterbourgon/g2s"
+	"log"
 	"os"
 	"runtime"
 	"time"
+
+	"github.com/peterbourgon/g2s"
 )
 
 const (
@@ -31,7 +32,7 @@ func init() {
 		_statter = s
 	} else {
 		_statter = g2s.Noop()
-		log.Error(err)
+		log.Println(err)
 	}
 
 	go pprof_task()
@@ -50,7 +51,7 @@ func collect() {
 	var tag string
 	hostname, err := os.Hostname()
 	if err != nil {
-		log.Critical(SERVICE, err)
+		log.Println(SERVICE, err)
 		return
 	}
 	tag = hostname + ".pprof"

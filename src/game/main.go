@@ -5,18 +5,17 @@ import (
 	"net"
 	"os"
 
-	log "github.com/gonet2/libs/nsq-logger"
+	log "github.com/Sirupsen/logrus"
 	sp "github.com/gonet2/libs/services"
 	_ "github.com/gonet2/libs/statsd-pprof"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	log.SetPrefix(SERVICE)
 	// 监听
 	lis, err := net.Listen("tcp", _port)
 	if err != nil {
-		log.Critical(err)
+		log.Panic(err)
 		os.Exit(-1)
 	}
 	log.Info("listening on ", lis.Addr())
