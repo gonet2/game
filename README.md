@@ -30,6 +30,3 @@
 
 ## 安装
 参考Dockerfile
-
-# 环境变量
-> NSQD_HOST: eg : http://172.17.42.1:4151
