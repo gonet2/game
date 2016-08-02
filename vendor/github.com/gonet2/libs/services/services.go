@@ -215,6 +215,7 @@ func (p *service_pool) remove_service(key string) {
 	// remove a service
 	for k := range service.clients {
 		if service.clients[k].key == key { // deletion
+			service.clients[k].conn.Close()
 			service.clients = append(service.clients[:k], service.clients[k+1:]...)
 			log.Println("service removed:", key)
 			return
