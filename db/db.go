@@ -1,17 +1,12 @@
 package db
 
 import (
-	"gopkg.in/mgo.v2"
-	"log"
 	"os"
 	"time"
-)
 
-const (
-	DEFAULT_MGO_TIMEOUT = 300
-	DEFAULT_CONCURRENT  = 128
-	DEFAULT_MONGODB_URL = "mongodb://172.17.42.1/mydb"
-	ENV_MONGODB         = "MONGODB_URL"
+	log "github.com/Sirupsen/logrus"
+
+	mgo "gopkg.in/mgo.v2"
 )
 
 type Database struct {
@@ -19,23 +14,18 @@ type Database struct {
 	latch   chan *mgo.Session
 }
 
-func (db *Database) Init() {
+func (db *Database) Init(addr string, concurrent int, timeout time.Duration) {
 	// create latch
-	db.latch = make(chan *mgo.Session, DEFAULT_CONCURRENT)
-	// connect db
-	mongodb_url := DEFAULT_MONGODB_URL
-	if env := os.Getenv(ENV_MONGODB); env != "" {
-		mongodb_url = env
-	}
-	sess, err := mgo.Dial(mongodb_url)
+	db.latch = make(chan *mgo.Session, concurrent)
+	sess, err := mgo.Dial(addr)
 	if err != nil {
-		log.Println("mongodb: cannot connect to", os.Getenv(mongodb_url), err)
+		log.Println("mongodb: cannot connect to - ", addr, err)
 		os.Exit(-1)
 	}
 
 	// set params
 	sess.SetMode(mgo.Strong, true)
-	sess.SetSocketTimeout(DEFAULT_MGO_TIMEOUT * time.Second)
+	sess.SetSocketTimeout(timeout)
 	sess.SetCursorTimeout(0)
 	db.session = sess
 
