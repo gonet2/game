@@ -6,6 +6,7 @@ import (
 	pb "game/proto"
 	"game/services"
 	"net"
+	"net/http"
 	"os"
 
 	log "github.com/Sirupsen/logrus"
@@ -14,6 +15,7 @@ import (
 )
 
 func main() {
+	go http.ListenAndServe("0.0.0.0:6060", nil)
 	app := &cli.App{
 		Name: "agent",
 		Flags: []cli.Flag{
