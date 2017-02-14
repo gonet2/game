@@ -43,24 +43,6 @@
 			"revisionTime": "2016-06-29T21:10:53Z"
 		},
 		{
-			"checksumSHA1": "5c01kBDxRP/y2XZHCnuslN2ZoUA=",
-			"path": "github.com/gonet2/libs/services",
-			"revision": "bf8c3888f17589f6253ef142fbdf9facadeabd09",
-			"revisionTime": "2016-07-28T04:21:58Z"
-		},
-		{
-			"checksumSHA1": "C8c4QZJS099ZNBIQsrLMFHkNjxk=",
-			"path": "github.com/gonet2/libs/statsd-pprof",
-			"revision": "1b61d919b824e1fd54a32e370058cf43ba82469d",
-			"revisionTime": "2016-07-12T15:56:50Z"
-		},
-		{
-			"checksumSHA1": "98pC93jy7+oik3tlde3hVAoh3SE=",
-			"path": "github.com/peterbourgon/g2s",
-			"revision": "ec76db4c1ac16400ac0e17ca9c4840e1d23da5dc",
-			"revisionTime": "2014-09-25T15:41:42Z"
-		},
-		{
 			"checksumSHA1": "SpCe//D+M2cDUkLhyCv871wdcoM=",
 			"path": "github.com/tealeg/xlsx",
 			"revision": "46e6e472d68f28b9064c29401e1586e4f7960b33",
@@ -209,6 +191,12 @@
 			"path": "gopkg.in/mgo.v2/internal/scram",
 			"revision": "29cc868a5ca65f401ff318143f9408d02f4799cc",
 			"revisionTime": "2016-06-09T18:00:28Z"
+		},
+		{
+			"checksumSHA1": "exMnsyei9H9PgttMUskof6S2554=",
+			"path": "gopkg.in/urfave/cli.v2",
+			"revision": "e485446237011b8abac93919242e6f059ad56c87",
+			"revisionTime": "2016-10-29T22:39:47Z"
 		},
 		{
 			"path": "proto",

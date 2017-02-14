@@ -3,28 +3,36 @@ package numbers
 import (
 	"encoding/base64"
 	"fmt"
+	gopkg "path"
 	"strconv"
+	"sync"
+
+	//	cli "gopkg.in/urfave/cli.v2"
+
+	"game/etcdclient"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/tealeg/xlsx"
 	"golang.org/x/net/context"
 )
 
-import (
-	"etcdclient"
-)
-
-const (
-	DEFAULT_NUMBERS_PATH = "/numbers"
-	DEFAULT_ETCD         = "http://172.17.42.1:2379"
-)
+type NumbersOp interface {
+	GetInt(tblname string, rowname interface{}, fieldname string) int32
+	GetFloat(tblname string, rowname interface{}, fieldname string) float64
+	GetString(tblname string, rowname interface{}, fieldname string) string
+	GetKeys(tblname string) []string
+	IsFieldExists(tblname string, rowname interface{}, fieldname string) bool
+	IsRecordExists(tblname string, rowname interface{}) bool
+	IsTableExists(tblname string) bool
+}
 
 var (
-	_default_numbers numbers
+	_dataConfig configs
 )
 
-func init() {
-	_default_numbers.init(DEFAULT_NUMBERS_PATH)
+func Init(path string) {
+	_dataConfig.init(path)
+	go watcher(path)
 }
 
 // 字段定义
@@ -44,46 +52,91 @@ type table struct {
 // 记录2    值       值       值
 // 记录3    值       值       值
 
+// read only
 // 数值类
 type numbers struct {
 	tables map[string]*table
+	name   string
 }
 
-func (ns *numbers) init(path string) {
-	ns.tables = make(map[string]*table)
+type configs struct {
+	numbers map[string]*numbers
+	sync.RWMutex
+}
+
+// Numbers 获取excel
+func Numbers(name string) NumbersOp {
+	_dataConfig.RLock()
+	defer _dataConfig.RUnlock()
+	if n, ok := _dataConfig.numbers[name]; ok {
+		return NumbersOp(n)
+	}
+	panic(fmt.Sprintf("numbers not exists %v", name))
+}
+
+// SetNumber 更新表
+func SetNumbers(ns *numbers) {
+	_dataConfig.Lock()
+	defer _dataConfig.Unlock()
+	if _dataConfig.numbers == nil {
+		_dataConfig.numbers = make(map[string]*numbers)
+	}
+	_dataConfig.numbers[ns.name] = ns
+}
+
+func (c *configs) init(path string) {
 	kapi := etcdclient.KeysAPI()
-	resp, err := kapi.Get(context.Background(), path, nil)
+	opt := etcdclient.NewOptions()
+	resp, err := kapi.Get(context.Background(), path, &opt)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	// 解码xlsx
-	xlsx_bin, err := base64.StdEncoding.DecodeString(resp.Node.Value)
-	if err != nil {
-		log.Critical(err)
-		return
-	}
+	for i := range resp.Node.Nodes {
+		node := resp.Node.Nodes[i]
+		// 解码xlsx
+		xlsx_bin, err := base64.StdEncoding.DecodeString(node.Value)
+		if err != nil {
+			log.Error(err, node.Key)
+			return
+		}
 
-	// 读取xlsx
-	xlsx_reader, err := xlsx.OpenBinary(xlsx_bin)
-	if err != nil {
-		log.Critical(err)
-		return
+		// 读取xlsx
+		xlsx_reader, err := xlsx.OpenBinary(xlsx_bin)
+		if err != nil {
+			log.Error(err, node.Key)
+			return
+		}
+		ns := &numbers{tables: make(map[string]*table), name: gopkg.Base(node.Key)}
+		ns.parse(gopkg.Base(node.Key), xlsx_reader.Sheets)
+		SetNumbers(ns)
 	}
-	ns.parse(xlsx_reader.Sheets)
 }
 
 // 载入数据
-func (ns *numbers) parse(sheets []*xlsx.Sheet) {
+func (ns *numbers) parse(xlsxname string, sheets []*xlsx.Sheet) {
+	var sheetName string
+	defer func() {
+		if x := recover(); x != nil {
+			log.WithField("errmsg", fmt.Sprintf("xls %v sheetName %v err %v", xlsxname, sheetName, x)).
+				WithField("err", x).
+				Error()
+		}
+	}()
+
 	for _, sheet := range sheets {
+		//	println("parse sheet ", sheet.Name)
 		// 第一行为表头，因此从第二行开始
 		if len(sheet.Rows) > 0 {
 			header := sheet.Rows[0]
 			for i := 1; i < len(sheet.Rows); i++ {
 				row := sheet.Rows[i]
-				for j := 1; j < len(row.Cells); j++ {
-					ns.set(sheet.Name, row.Cells[0].String(), header.Cells[j].String(), row.Cells[j].String())
+				for j := 0; j < len(row.Cells); j++ {
+					rowname, _ := row.Cells[0].String()
+					fieldname, _ := header.Cells[j].String()
+					value, _ := row.Cells[j].String()
+					ns.set(sheet.Name, rowname, fieldname, value)
 				}
 			}
 		}
@@ -141,7 +194,13 @@ func (ns *numbers) get(tblname string, rowname string, fieldname string) string 
 	return value
 }
 
+func (ns *numbers) IsTableExists(tblname string) bool {
+	_, ok := ns.tables[tblname]
+	return ok
+}
+
 func (ns *numbers) GetInt(tblname string, rowname interface{}, fieldname string) int32 {
+
 	val := ns.get(tblname, fmt.Sprint(rowname), fieldname)
 	if val == "" {
 		return 0
@@ -161,6 +220,7 @@ func (ns *numbers) GetInt(tblname string, rowname interface{}, fieldname string)
 }
 
 func (ns *numbers) GetFloat(tblname string, rowname interface{}, fieldname string) float64 {
+
 	val := ns.get(tblname, fmt.Sprint(rowname), fieldname)
 	if val == "" {
 		return 0.0
@@ -210,19 +270,13 @@ func (ns *numbers) IsRecordExists(tblname string, rowname interface{}) bool {
 	return true
 }
 
-func (ns *numbers) IsFieldExists(tblname string, fieldname string) bool {
+func (ns *numbers) IsFieldExists(tblname string, rowname interface{}, fieldname string) bool {
 	tbl, ok := ns.tables[tblname]
 	if !ok {
 		return false
 	}
 
-	// get one record key
-	key := ""
-	for k, _ := range tbl.records {
-		key = k
-		break
-	}
-
+	key := fmt.Sprint(rowname)
 	rec, ok := tbl.records[key]
 	if !ok {
 		return false
@@ -236,35 +290,33 @@ func (ns *numbers) IsFieldExists(tblname string, fieldname string) bool {
 	return true
 }
 
-// 读取表tblname, 行rowname, 字段fieldname的值
-func GetInt(tblname string, rowname interface{}, fieldname string) int32 {
-	return _default_numbers.GetInt(tblname, rowname, fieldname)
-}
+func watcher(path string) {
+	kapi := etcdclient.KeysAPI()
+	w := kapi.Watcher(path, etcdclient.NewWatcherOptions(true))
+	for {
+		resp, err := w.Next(context.Background())
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+		log.Info(resp)
+		switch resp.Action {
+		case "set", "create", "update", "compareAndSwap":
+			xlsx_bin, err := base64.StdEncoding.DecodeString(resp.Node.Value)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
 
-func GetFloat(tblname string, rowname interface{}, fieldname string) float64 {
-	return _default_numbers.GetFloat(tblname, rowname, fieldname)
-}
-
-func GetString(tblname string, rowname interface{}, fieldname string) string {
-	return _default_numbers.GetString(tblname, rowname, fieldname)
-}
-
-// 读取表的所有KEY
-func GetKeys(tblname string) []string {
-	return _default_numbers.GetKeys(tblname)
-}
-
-// 返回表的总记录条数
-func Count(tblname string) int32 {
-	return _default_numbers.Count(tblname)
-}
-
-// 测试某个字段是否存在
-func IsFieldExists(tblname string, fieldname string) bool {
-	return _default_numbers.IsFieldExists(tblname, fieldname)
-}
-
-// 测试某条记录是否存在
-func IsRecordExists(tblname string, rowname interface{}) bool {
-	return _default_numbers.IsRecordExists(tblname, rowname)
+			// 读取xlsx
+			xlsx_reader, err := xlsx.OpenBinary(xlsx_bin)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			ns := &numbers{tables: make(map[string]*table), name: gopkg.Base(resp.Node.Key)}
+			ns.parse(gopkg.Base(resp.Node.Key), xlsx_reader.Sheets)
+			SetNumbers(ns)
+		}
+	}
 }
