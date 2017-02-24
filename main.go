@@ -3,6 +3,7 @@ package main
 import (
 	"game/client_handler"
 	"game/etcdclient"
+	"game/kafka"
 	"game/numbers"
 	pb "game/proto"
 	"game/services"
@@ -19,11 +20,18 @@ import (
 func main() {
 	go http.ListenAndServe("0.0.0.0:6060", nil)
 	app := &cli.App{
-		Name: "agent",
+		Name:    "game",
+		Usage:   "a stream processor based game",
+		Version: "2.0",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
+				Name:  "id",
+				Value: "game1",
+				Usage: "id of this service",
+			},
+			&cli.StringFlag{
 				Name:  "listen",
-				Value: ":8888",
+				Value: ":10000",
 				Usage: "listening address:port",
 			},
 			&cli.StringSliceFlag{
@@ -40,6 +48,21 @@ func main() {
 				Name:  "numbers",
 				Value: "/numbers",
 				Usage: "numbers path in etcd",
+			},
+			&cli.StringSliceFlag{
+				Name:  "kafka-brokers",
+				Value: cli.NewStringSlice("127.0.0.1:9092"),
+				Usage: "kafka brokers address",
+			},
+			&cli.StringFlag{
+				Name:  "wal-topic",
+				Value: "WAL-MYGAME",
+				Usage: "write ahead log topic in kafka, very important!",
+			},
+			&cli.StringFlag{
+				Name:  "trace-topic",
+				Value: "trace-MYGAME",
+				Usage: "user tracking topic",
 			},
 			&cli.StringSliceFlag{
 				Name:  "services",
@@ -63,17 +86,19 @@ func main() {
 			},
 		},
 		Action: func(c *cli.Context) error {
+			log.Println("id:", c.String("id"))
 			log.Println("listen:", c.String("listen"))
 			log.Println("etcd-hosts:", c.StringSlice("etcd-hosts"))
 			log.Println("etcd-root:", c.String("etcd-root"))
 			log.Println("services:", c.StringSlice("services"))
 			log.Println("numbers:", c.String("numbers"))
+			log.Println("kafka-brokers:", c.StringSlice("kafka-brokers"))
 			log.Println("mongodb:", c.String("mongodb"))
 			log.Println("mongodb-timeout:", c.Duration("mongodb-timeout"))
 			log.Println("mongodb-concurrent:", c.Int("mongodb-concurrent"))
 
 			// 监听
-			lis, err := net.Listen("tcp", _port)
+			lis, err := net.Listen("tcp", c.String("listen"))
 			if err != nil {
 				log.Panic(err)
 				os.Exit(-1)
@@ -89,6 +114,7 @@ func main() {
 			etcdclient.Init(c.StringSlice("etcd-hosts"))
 			services.Init(c.String("etcd-root"), c.StringSlice("etcd-hosts"), c.StringSlice("services"))
 			numbers.Init(c.String("numbers"))
+			kafka.Init(c.StringSlice("kafka-brokers"), c.String("wal-topic"), c.String("trace-topic"), c.String("id"))
 			client_handler.Init(c.String("mongodb"), c.Int("mongodb-concurrent"), c.Duration("mongodb-concurrent"))
 			// 开始服务
 			return s.Serve(lis)

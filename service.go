@@ -18,14 +18,6 @@ import (
 	. "game/types"
 )
 
-const (
-	_port = ":51000"
-)
-
-const (
-	SERVICE = "[GAME]"
-)
-
 var (
 	ERROR_INCORRECT_FRAME_TYPE = errors.New("incorrect frame type")
 	ERROR_SERVICE_NOT_BIND     = errors.New("service not bind")
