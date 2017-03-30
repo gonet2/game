@@ -29,9 +29,13 @@ func (r *Registry) Register(id int32, v interface{}) {
 }
 
 // unregister a user
-func (r *Registry) Unregister(id int32) {
+func (r *Registry) Unregister(id int32, v interface{}) {
 	r.Lock()
-	delete(r.records, id)
+	if oldv, ok := r.records[id]; ok {
+		if oldv == v {
+			delete(r.records, id)
+		}
+	}
 	r.Unlock()
 }
 
@@ -55,8 +59,8 @@ func Register(id int32, v interface{}) {
 	_default_registry.Register(id, v)
 }
 
-func Unregister(id int32) {
-	_default_registry.Unregister(id)
+func Unregister(id int32, v interface{}) {
+	_default_registry.Unregister(id, v)
 }
 
 func Query(id int32) interface{} {

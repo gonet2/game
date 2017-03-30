@@ -63,7 +63,7 @@ func (s *server) Stream(stream GameService_StreamServer) error {
 	ch_ipc := make(chan *Game_Frame, DEFAULT_CH_IPC_SIZE)
 
 	defer func() {
-		registry.Unregister(sess.UserId)
+		registry.Unregister(sess.UserId, ch_ipc)
 		close(sess_die)
 		log.Debug("stream end:", sess.UserId)
 	}()
