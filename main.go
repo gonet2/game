@@ -115,7 +115,7 @@ func main() {
 			services.Init(c.String("etcd-root"), c.StringSlice("etcd-hosts"), c.StringSlice("services"))
 			numbers.Init(c.String("numbers"))
 			kafka.Init(c.StringSlice("kafka-brokers"), c.String("wal-topic"), c.String("trace-topic"), c.String("id"))
-			client_handler.Init(c.String("mongodb"), c.Int("mongodb-concurrent"), c.Duration("mongodb-concurrent"))
+			client_handler.Init(c.String("mongodb"), c.Int("mongodb-concurrent"), c.Duration("mongodb-timeout"))
 			// 开始服务
 			return s.Serve(lis)
 		},
